@@ -139,6 +139,7 @@ describe('medication pages', () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = new URL(String(input))
       if (url.pathname.endsWith('/auth/me')) return response({ user: elderUser })
+      if (url.pathname.includes('/notifications/unread-count')) return response({ unreadCount: 0 })
       return new Promise<Response>((resolve) => pending.push(resolve))
     })
     globalThis.fetch = fetchMock as typeof fetch

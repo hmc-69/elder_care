@@ -100,6 +100,13 @@ const conversationHistoryQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),
 }).strict()
 
+const notificationIdSchema = z.string().trim().min(1).max(191)
+const notificationListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(20),
+  unreadOnly: z.enum(['true', 'false']).transform((val) => val === 'true').optional().default('false'),
+}).strict()
+
 module.exports = {
   registerSchema,
   loginSchema,
@@ -122,5 +129,7 @@ module.exports = {
   chatMessageSchema,
   conversationUpdateSchema,
   conversationHistoryQuerySchema,
+  notificationIdSchema,
+  notificationListQuerySchema,
 }
 

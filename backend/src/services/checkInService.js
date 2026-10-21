@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma')
+const notificationService = require('./notificationService')
 
 const HISTORY_DAYS = 30
 const MAX_HISTORY_DAYS = 90
@@ -116,6 +117,25 @@ async function reconcileRange(elderId, requestedStart, requestedEnd, now = new D
     })
   }
 
+  // Idempotently notify connected family of missed check-in on today
+  const missedRows = await prisma.checkIn.findMany({
+    where: { elderId, checkinDate: dbDate(today), status: 'MISSED' },
+    select: { id: true, period: true },
+  })
+  if (missedRows.length > 0) {
+    const elder = await prisma.user.findUnique({ where: { id: elderId }, select: { name: true } }).catch(() => null)
+    for (const missed of missedRows) {
+      await notificationService.notifyConnectedFamily({
+        elderId,
+        type: 'CHECKIN_MISSED',
+        title: 'Missed Daily Check-in',
+        message: `${elder?.name || 'Your connected elder'} missed their scheduled ${missed.period.toLowerCase()} check-in.`,
+        relatedEntityType: 'CHECKIN',
+        relatedEntityId: missed.id,
+      }).catch(() => {})
+    }
+  }
+
   return prisma.checkIn.findMany({
     where: { elderId, checkinDate: { gte: dbDate(start), lte: dbDate(requestedEnd) } },
     orderBy: { checkinDate: 'desc' },
@@ -148,6 +168,18 @@ async function completeToday(elderId, period, now = new Date()) {
     throw new CheckInError(409, "Today's check-in could not be completed. Please try again.")
   }
   const completed = await prisma.checkIn.findUnique({ where: { id: checkIn.id } })
+
+  const elder = await prisma.user.findUnique({ where: { id: elderId }, select: { name: true } }).catch(() => null)
+  await notificationService.notifyConnectedFamily({
+    elderId,
+    actorUserId: elderId,
+    type: 'CHECKIN_COMPLETED',
+    title: 'Daily Check-in Completed',
+    message: `${elder?.name || 'Your connected elder'} completed their ${period.toLowerCase()} check-in.`,
+    relatedEntityType: 'CHECKIN',
+    relatedEntityId: completed.id,
+  }).catch(() => {})
+
   return toPublic(completed, now)
 }
 

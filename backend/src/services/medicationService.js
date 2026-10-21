@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma')
+const notificationService = require('./notificationService')
 
 const MISSED_GRACE_MINUTES = 60
 const frequencyCounts = { ONCE_DAILY: 1, TWICE_DAILY: 2, THREE_TIMES_DAILY: 3 }
@@ -206,6 +207,18 @@ async function markTaken(medicationId, elderId, now = new Date()) {
     data: { status: 'TAKEN', takenAt: now },
   })
   if (result.count !== 1) throw new MedicationError(409, 'This dose has already been recorded.')
+
+  const elder = await prisma.user.findUnique({ where: { id: elderId }, select: { name: true } }).catch(() => null)
+  await notificationService.notifyConnectedFamily({
+    elderId,
+    actorUserId: elderId,
+    type: 'MEDICATION_TAKEN',
+    title: 'Medication Taken',
+    message: `${elder?.name || 'Your connected elder'} took their scheduled dose of ${medication.name} (${due.scheduledTime}).`,
+    relatedEntityType: 'MEDICATION_LOG',
+    relatedEntityId: due.id,
+  }).catch(() => {})
+
   return {
     id: due.id, medication: publicMedication(medication), scheduledDate: date,
     scheduledTime: due.scheduledTime, status: 'TAKEN', takenAt: now,

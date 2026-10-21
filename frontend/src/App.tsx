@@ -15,6 +15,7 @@ import { ElderSosPage } from './pages/ElderSosPage'
 import { FamilyEmergenciesPage } from './pages/FamilyEmergenciesPage'
 import { FamilyElderSosPage } from './pages/FamilyElderSosPage'
 import { AssistantPage } from './pages/AssistantPage'
+import { NotificationsPage } from './pages/NotificationsPage'
 import { LoginPage } from './pages/LoginPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
@@ -58,6 +59,7 @@ function AppRoutes() {
       <Route path="/elder/check-in" element={<ProtectedRoute roles={['ELDER']}><ElderCheckInPage/></ProtectedRoute>}/>
       <Route path="/elder/sos" element={<ProtectedRoute roles={['ELDER']}><ElderSosPage/></ProtectedRoute>}/>
       <Route path="/elder/assistant" element={<ProtectedRoute roles={['ELDER']}><AssistantPage/></ProtectedRoute>}/>
+      <Route path="/notifications" element={<NotificationsPage/>}/>
       <Route path="/family/connections" element={<ProtectedRoute roles={['FAMILY']}><FamilyConnectionsPage/></ProtectedRoute>}/>
       <Route path="/family/elders" element={<ProtectedRoute roles={['FAMILY']}><FamilyDirectoryPage mode="elders"/></ProtectedRoute>}/>
       <Route path="/family/medications" element={<ProtectedRoute roles={['FAMILY']}><FamilyDirectoryPage mode="medications"/></ProtectedRoute>}/>

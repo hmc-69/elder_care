@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma')
+const notificationService = require('./notificationService')
 
 class ConnectionError extends Error {
   constructor(status, message) {
@@ -59,7 +60,18 @@ async function createRequest(familyId, elderId, relationship) {
   }
 
   try {
-    return await prisma.familyConnection.create({ data: { familyId, elderId, relationship } })
+    const created = await prisma.familyConnection.create({ data: { familyId, elderId, relationship } })
+    const familyUser = await prisma.user.findUnique({ where: { id: familyId }, select: { name: true } })
+    await notificationService.createNotification({
+      recipientUserId: elderId,
+      actorUserId: familyId,
+      type: 'CONNECTION_REQUEST',
+      title: 'New Connection Request',
+      message: `${familyUser?.name || 'A family member'} sent you a connection request (${relationship}).`,
+      relatedEntityType: 'FAMILY_CONNECTION',
+      relatedEntityId: created.id,
+    }).catch(() => {})
+    return created
   } catch (error) {
     if (error.code === 'P2002') throw new ConnectionError(409, 'A connection request is already active.')
     throw error
@@ -91,7 +103,32 @@ async function respondToRequest(connectionId, elderId, status) {
     data: { status },
   })
   if (result.count !== 1) throw new ConnectionError(409, 'The request has already been handled.')
-  return prisma.familyConnection.findUnique({ where: { id: connectionId }, include: detailInclude })
+  const updated = await prisma.familyConnection.findUnique({ where: { id: connectionId }, include: detailInclude })
+
+  const elderUser = updated?.elder?.name || 'Your connected elder'
+  if (status === 'ACCEPTED') {
+    await notificationService.createNotification({
+      recipientUserId: connection.familyId,
+      actorUserId: elderId,
+      type: 'CONNECTION_ACCEPTED',
+      title: 'Connection Accepted',
+      message: `${elderUser} accepted your connection request.`,
+      relatedEntityType: 'FAMILY_CONNECTION',
+      relatedEntityId: connectionId,
+    }).catch(() => {})
+  } else if (status === 'REJECTED') {
+    await notificationService.createNotification({
+      recipientUserId: connection.familyId,
+      actorUserId: elderId,
+      type: 'CONNECTION_REJECTED',
+      title: 'Connection Request Declined',
+      message: `${elderUser} declined your connection request.`,
+      relatedEntityType: 'FAMILY_CONNECTION',
+      relatedEntityId: connectionId,
+    }).catch(() => {})
+  }
+
+  return updated
 }
 
 async function listFamilyConnections(familyId) {

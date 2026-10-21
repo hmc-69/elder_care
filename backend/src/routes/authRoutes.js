@@ -3,11 +3,18 @@ const jwt = require('jsonwebtoken')
 const { Router } = require('express')
 const prisma = require('../lib/prisma')
 const { requireAuth } = require('../middleware/authMiddleware')
+const { createRateLimiter } = require('../middleware/rateLimiter')
 const { toSafeUser } = require('../utils/safeUser')
 const { loginSchema, registerSchema } = require('../validation/schemas')
 
 const router = Router()
 const BCRYPT_ROUNDS = 12
+
+const authRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: 'Too many authentication attempts. Please try again in a minute.',
+})
 
 function validationError(response, error) {
   return response.status(400).json({
@@ -23,7 +30,7 @@ function issueToken(user) {
   })
 }
 
-router.post('/register', async (request, response, next) => {
+router.post('/register', authRateLimiter, async (request, response, next) => {
   const result = registerSchema.safeParse(request.body)
   if (!result.success) return validationError(response, result.error)
 
@@ -40,7 +47,7 @@ router.post('/register', async (request, response, next) => {
   }
 })
 
-router.post('/login', async (request, response, next) => {
+router.post('/login', authRateLimiter, async (request, response, next) => {
   const result = loginSchema.safeParse(request.body)
   if (!result.success) return validationError(response, result.error)
 

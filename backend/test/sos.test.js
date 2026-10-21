@@ -112,10 +112,16 @@ const prismaMock = {
       return { count }
     },
   },
+  notification: {
+    async create() { return null },
+    async findFirst() { return null },
+    async count() { return 0 },
+  },
   $transaction: async (fn) => fn(prismaMock),
 }
 
-require.cache[require.resolve('../src/lib/prisma')] = { exports: prismaMock }
+const prismaPath = require.resolve('../src/lib/prisma')
+require.cache[prismaPath] = { id: prismaPath, filename: prismaPath, loaded: true, exports: prismaMock }
 const app = require('../src/index')
 
 let server

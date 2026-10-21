@@ -2,10 +2,17 @@ const bcrypt = require('bcryptjs')
 const { Router } = require('express')
 const prisma = require('../lib/prisma')
 const { requireAuth } = require('../middleware/authMiddleware')
+const { createRateLimiter } = require('../middleware/rateLimiter')
 const { toSafeUser } = require('../utils/safeUser')
 const { changePasswordSchema, profileSchema } = require('../validation/schemas')
 
 const router = Router()
+
+const passwordRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  max: 5,
+  message: 'Too many password change attempts. Please try again later.',
+})
 
 function validationError(response, error) {
   return response.status(400).json({
@@ -41,7 +48,7 @@ router.put('/me', async (request, response, next) => {
   }
 })
 
-router.put('/me/password', async (request, response, next) => {
+router.put('/me/password', passwordRateLimiter, async (request, response, next) => {
   const result = changePasswordSchema.safeParse(request.body)
   if (!result.success) return validationError(response, result.error)
 

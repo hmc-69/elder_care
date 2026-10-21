@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma')
+const notificationService = require('./notificationService')
 
 const SOS_DISCLAIMER =
   'In-app notification only. This service alerts connected family members within ElderCare Connect. It does not contact 911, local emergency services, or medical dispatchers. If you are in immediate danger, please contact your local emergency services directly.'
@@ -85,6 +86,16 @@ async function triggerSos(elderId, data = {}) {
       include: { elder: true, acknowledgedBy: true, resolvedBy: true },
     })
   })
+
+  await notificationService.notifyConnectedFamily({
+    elderId,
+    actorUserId: elderId,
+    type: 'SOS_TRIGGERED',
+    title: 'EMERGENCY: SOS Alert Triggered!',
+    message: `${created.elder?.name || 'Your connected elder'} triggered an SOS emergency alert. Please check immediately.`,
+    relatedEntityType: 'EMERGENCY_EVENT',
+    relatedEntityId: created.id,
+  }).catch(() => {})
 
   return {
     message: 'SOS emergency alert activated.',
@@ -200,6 +211,16 @@ async function cancelSos(eventId, elderId, { reason } = {}) {
     include: { elder: true, acknowledgedBy: true, resolvedBy: true },
   })
 
+  await notificationService.notifyConnectedFamily({
+    elderId,
+    actorUserId: elderId,
+    type: 'SOS_CANCELLED',
+    title: 'SOS Alert Cancelled',
+    message: `${updated?.elder?.name || 'Elder'} cancelled their emergency alert (false alarm).`,
+    relatedEntityType: 'EMERGENCY_EVENT',
+    relatedEntityId: eventId,
+  }).catch(() => {})
+
   return {
     message: 'Emergency alert cancelled.',
     event: formatEvent(updated),
@@ -308,6 +329,16 @@ async function acknowledgeSos(eventId, familyId) {
     throw new SosError(409, 'Unable to acknowledge alert due to concurrent status change.', formatEvent(updated))
   }
 
+  await notificationService.createNotification({
+    recipientUserId: event.elderId,
+    actorUserId: familyId,
+    type: 'SOS_ACKNOWLEDGED',
+    title: 'Emergency Alert Acknowledged',
+    message: `${updated?.acknowledgedBy?.name || 'A family member'} acknowledged your emergency alert.`,
+    relatedEntityType: 'EMERGENCY_EVENT',
+    relatedEntityId: eventId,
+  }).catch(() => {})
+
   return {
     message: 'Emergency alert acknowledged successfully. Your elder and family can see that you are responding.',
     event: formatEvent(updated),
@@ -357,6 +388,16 @@ async function resolveSos(eventId, familyId, { notes } = {}) {
     }
     throw new SosError(409, 'Unable to resolve alert due to concurrent status change.', formatEvent(updated))
   }
+
+  await notificationService.createNotification({
+    recipientUserId: event.elderId,
+    actorUserId: familyId,
+    type: 'SOS_RESOLVED',
+    title: 'Emergency Alert Resolved',
+    message: `Your emergency alert was marked as resolved by ${updated?.resolvedBy?.name || 'family'}.`,
+    relatedEntityType: 'EMERGENCY_EVENT',
+    relatedEntityId: eventId,
+  }).catch(() => {})
 
   return {
     message: 'Emergency alert resolved.',

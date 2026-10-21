@@ -69,6 +69,8 @@ model User {
   acknowledgedEmergencies EmergencyEvent[]   @relation("AcknowledgedEmergencies")
   resolvedEmergencies     EmergencyEvent[]   @relation("ResolvedEmergencies")
   conversations           Conversation[]
+  notificationsReceived   Notification[]     @relation("NotificationsReceived")
+  notificationsActed      Notification[]     @relation("NotificationsActed")
 
   @@map("users")
 }
@@ -207,4 +209,44 @@ model ChatMessage {
   @@index([createdAt])
   @@map("chat_messages")
 }
+
+enum NotificationType {
+  CONNECTION_REQUEST
+  CONNECTION_ACCEPTED
+  CONNECTION_REJECTED
+  CHECKIN_COMPLETED
+  CHECKIN_MISSED
+  MEDICATION_DUE
+  MEDICATION_TAKEN
+  MEDICATION_MISSED
+  SOS_TRIGGERED
+  SOS_ACKNOWLEDGED
+  SOS_RESOLVED
+  SOS_CANCELLED
+  SYSTEM
+}
+
+model Notification {
+  id                String            @id @default(cuid())
+  recipientUserId   String
+  actorUserId       String?
+  type              NotificationType
+  title             String            @db.VarChar(150)
+  message           String            @db.VarChar(500)
+  relatedEntityType String?           @db.VarChar(50)
+  relatedEntityId   String?           @db.VarChar(191)
+  readAt            DateTime?
+  createdAt         DateTime          @default(now())
+
+  recipientUser     User              @relation("NotificationsReceived", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  actorUser         User?             @relation("NotificationsActed", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([recipientUserId])
+  @@index([readAt])
+  @@index([createdAt])
+  @@index([recipientUserId, readAt])
+  @@index([type, relatedEntityType, relatedEntityId])
+  @@map("notifications")
+}
+
 

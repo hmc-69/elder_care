@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Activity, Bell, Check, ChevronDown, CircleHelp, Heart, LayoutDashboard, LogOut, Menu, Pill, Settings, Shield, Sparkles, UserRound, Users, X } from 'lucide-react'
+import { Activity, Check, ChevronDown, CircleHelp, Heart, LayoutDashboard, LogOut, Menu, Pill, Settings, Shield, Sparkles, UserRound, Users, X } from 'lucide-react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { NotificationBell } from './NotificationBell'
 
 type NavItem = { label: string; to?: string; icon: typeof LayoutDashboard; unavailable?: boolean }
 
@@ -43,6 +44,7 @@ const titles: Array<[string, string]> = [
   ['/elder/assistant', 'AI Assistant'], ['/family/assistant', 'AI Assistant'],
   ['/family/elders/', 'Connected elder'],
   ['/family/connections', 'Connections'], ['/elder/connections', 'Connections'], ['/profile', 'Profile'], ['/settings', 'Settings'],
+  ['/notifications', 'Notifications'],
 ]
 
 export function AuthenticatedLayout() {
@@ -85,7 +87,7 @@ export function AuthenticatedLayout() {
       <header className="app-header">
         <button className="icon-button mobile-menu-button" type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)}>{menuOpen ? <X size={21}/> : <Menu size={21}/>}</button>
         <div className="header-title"><span className="header-kicker">ELDERCARE CONNECT</span><h1>{title}</h1></div>
-        <div className="header-actions"><button className="icon-button notification-button" type="button" aria-label="Notifications are coming soon" title="Notifications coming soon" disabled><Bell size={19}/></button>
+        <div className="header-actions"><NotificationBell onViewAll={() => navigate('/notifications')} />
           <details className="profile-menu" open={profileMenuOpen} onToggle={(event) => setProfileMenuOpen((event.currentTarget as HTMLDetailsElement).open)}>
             <summary aria-label={`Open ${user.name}'s profile menu`}><span className="user-avatar">{initials}</span><span className="profile-menu-copy"><strong>{user.name}</strong><small>{roleName}</small></span><ChevronDown size={16}/></summary>
             <div className="profile-menu-popover"><Link to="/profile"><UserRound size={17}/>View profile</Link><Link to="/profile#change-password"><Shield size={17}/>Change password</Link><span className="menu-unavailable"><Settings size={17}/>Settings <small>Coming soon</small></span><button type="button" onClick={() => void signOut()}><LogOut size={17}/>Sign out</button></div>

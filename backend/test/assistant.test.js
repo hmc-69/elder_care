@@ -140,7 +140,8 @@ const prismaMock = {
   $transaction: async (fn) => fn(prismaMock),
 }
 
-require.cache[require.resolve('../src/lib/prisma')] = { exports: prismaMock }
+const prismaPath = require.resolve('../src/lib/prisma')
+require.cache[prismaPath] = { id: prismaPath, filename: prismaPath, loaded: true, exports: prismaMock }
 const app = require('../src/index')
 const { getAIProvider, MockProvider, AIProviderError } = require('../src/services/aiProvider')
 const { _testResetRateLimits } = require('../src/services/assistantService')
