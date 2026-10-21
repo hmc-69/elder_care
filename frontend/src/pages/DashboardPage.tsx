@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Activity, ArrowRight, Check, Heart, Pill, Shield, ShieldAlert, Users } from 'lucide-react'
+import { Activity, ArrowRight, Check, Heart, Pill, Shield, ShieldAlert, Sparkles, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ErrorState, EmptyState, LoadingSkeleton, PageHeader, StatusBadge } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
@@ -120,6 +120,7 @@ function ElderDashboard({ name }: { name: string }) {
         {connections.length === 0 ? <EmptyState title="No family connections yet" description="When you connect with family, they will appear here." action={<Link className="button button-secondary button-small" to="/elder/connections">View requests</Link>}/> : <ul className="dashboard-people-list">{connections.map((connection) => <li key={connection.connectionId}><span className="user-avatar muted-avatar">{connection.family.name.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase()}</span><span><strong>{connection.family.name}</strong><small>{connection.relationship}</small></span><StatusBadge status="success">Connected</StatusBadge></li>)}</ul>}
       </section>
       <div className="quick-actions">
+        <Link to="/elder/assistant" className="assistant-quick-action"><Sparkles size={18}/> AI assistant <ArrowRight size={15}/></Link>
         <Link to="/elder/sos" className="sos-quick-action"><ShieldAlert size={18}/> SOS emergency <ArrowRight size={15}/></Link>
         <Link to="/elder/medications"><Pill size={18}/> Medicines <ArrowRight size={15}/></Link>
         <Link to="/elder/check-in"><Check size={18}/> Daily check-in <ArrowRight size={15}/></Link>
@@ -221,6 +222,11 @@ function FamilyDashboard({ name }: { name: string }) {
       <section className="dashboard-panel activity-panel"><div className="panel-heading"><div><span className="panel-icon sage"><Activity size={19}/></span><div><p className="panel-overline">TODAY</p><h2>Recent activity</h2></div></div></div>
         {activities.length === 0 ? <EmptyState title="No recent activity" description="Check-in, medication, and emergency updates will appear here when available."/> : <ul className="activity-list">{activities.map((activity, index) => <li key={`${activity.elder}-${activity.time}-${index}`}><span className={`activity-icon ${activity.kind}`}>{activity.kind === 'emergency' ? <ShieldAlert size={17}/> : activity.kind === 'checkin' ? <Check size={17}/> : <Pill size={17}/>}</span><span><strong>{activity.elder} {activity.text}</strong><small>{clock(activity.time)}</small></span></li>)}</ul>}
       </section>
+      <div className="quick-actions">
+        <Link to="/family/assistant" className="assistant-quick-action"><Sparkles size={18}/> AI assistant <ArrowRight size={15}/></Link>
+        <Link to="/family/connections"><Users size={18}/> Manage connections <ArrowRight size={15}/></Link>
+        <Link to="/family/emergencies" className="sos-quick-action"><ShieldAlert size={18}/> Emergency alerts <ArrowRight size={15}/></Link>
+      </div>
     </>}
   </div>
 }

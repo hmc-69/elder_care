@@ -186,10 +186,54 @@ async function main() {
     assert.equal((await api(`/api/family/elders/${otherElder.user.id}`, { token: otherFamily.token })).response.status, 404)
 
     assert.equal((await api(`/api/family/elders/${elder.user.id}/medications`, { token: family.token })).response.status, 404)
-    console.log('Live MySQL Module 3-5 flow passed: connections, medication access/logs, daily check-in, duplicate prevention, family read-only access, and ownership checks.')
+
+    // Module 7 live MySQL AI Assistant tests
+    const chat1 = await api('/api/assistant/chat', {
+      method: 'POST',
+      token: elder.token,
+      body: { message: 'Hello assistant, what daily check-ins do I have?' },
+    })
+    assert.equal(chat1.response.status, 200)
+    assert.ok(chat1.data.conversationId)
+    assert.ok(chat1.data.message.content)
+    const convId = chat1.data.conversationId
+
+    // Conversation lists
+    const convList = await api('/api/assistant/conversations', { token: elder.token })
+    assert.equal(convList.response.status, 200)
+    assert.equal(convList.data.conversations.length, 1)
+
+    // Single conversation view
+    const convView = await api(`/api/assistant/conversations/${convId}`, { token: elder.token })
+    assert.equal(convView.response.status, 200)
+    assert.equal(convView.data.conversation.messages.length, 2)
+
+    // Other user cannot view it
+    assert.equal((await api(`/api/assistant/conversations/${convId}`, { token: family.token })).response.status, 404)
+
+    // Update title
+    const patchedConv = await api(`/api/assistant/conversations/${convId}`, {
+      method: 'PATCH',
+      token: elder.token,
+      body: { title: 'Smoke Test Chat' },
+    })
+    assert.equal(patchedConv.response.status, 200)
+    assert.equal(patchedConv.data.conversation.title, 'Smoke Test Chat')
+
+    // Delete conversation
+    const deletedConv = await api(`/api/assistant/conversations/${convId}`, {
+      method: 'DELETE',
+      token: elder.token,
+    })
+    assert.equal(deletedConv.response.status, 200)
+    assert.equal((await api(`/api/assistant/conversations/${convId}`, { token: elder.token })).response.status, 404)
+
+    console.log('Live MySQL Module 3-7 flow passed: connections, medication access/logs, daily check-in, duplicate prevention, family read-only access, SOS emergency, and AI assistant.')
   } finally {
     if (server) await new Promise((resolve) => server.close(resolve))
     if (testUsers.length > 0) {
+      await prisma.chatMessage.deleteMany({ where: { conversation: { userId: { in: testUsers } } } })
+      await prisma.conversation.deleteMany({ where: { userId: { in: testUsers } } })
       await prisma.emergencyEvent.deleteMany({ where: { elderId: { in: testUsers } } })
       await prisma.checkIn.deleteMany({ where: { elderId: { in: testUsers } } })
       await prisma.medicationLog.deleteMany({ where: { medication: { elderId: { in: testUsers } } } })
@@ -199,6 +243,7 @@ async function main() {
     }
     await prisma.$disconnect()
   }
+
 }
 
 main().catch((error) => {

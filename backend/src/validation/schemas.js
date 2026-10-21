@@ -87,6 +87,19 @@ const sosHistoryQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(10),
 }).strict()
 
+const conversationIdSchema = z.string().trim().min(1).max(191)
+const chatMessageSchema = z.object({
+  message: z.string().trim().min(1, 'Message cannot be empty.').max(2000, 'Message cannot exceed 2000 characters.'),
+  conversationId: z.string().trim().min(1).max(191).optional().nullable(),
+}).strict()
+const conversationUpdateSchema = z.object({
+  title: z.string().trim().min(1, 'Title cannot be empty.').max(150, 'Title cannot exceed 150 characters.'),
+}).strict()
+const conversationHistoryQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(20),
+}).strict()
+
 module.exports = {
   registerSchema,
   loginSchema,
@@ -105,4 +118,9 @@ module.exports = {
   sosCancelSchema,
   sosResolveSchema,
   sosHistoryQuerySchema,
+  conversationIdSchema,
+  chatMessageSchema,
+  conversationUpdateSchema,
+  conversationHistoryQuerySchema,
 }
+

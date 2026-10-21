@@ -14,6 +14,7 @@ import { FamilyMedicationsPage } from './pages/FamilyMedicationsPage'
 import { ElderSosPage } from './pages/ElderSosPage'
 import { FamilyEmergenciesPage } from './pages/FamilyEmergenciesPage'
 import { FamilyElderSosPage } from './pages/FamilyElderSosPage'
+import { AssistantPage } from './pages/AssistantPage'
 import { LoginPage } from './pages/LoginPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RegisterPage } from './pages/RegisterPage'
@@ -56,11 +57,13 @@ function AppRoutes() {
       <Route path="/elder/medications" element={<ProtectedRoute roles={['ELDER']}><ElderMedicationsPage/></ProtectedRoute>}/>
       <Route path="/elder/check-in" element={<ProtectedRoute roles={['ELDER']}><ElderCheckInPage/></ProtectedRoute>}/>
       <Route path="/elder/sos" element={<ProtectedRoute roles={['ELDER']}><ElderSosPage/></ProtectedRoute>}/>
+      <Route path="/elder/assistant" element={<ProtectedRoute roles={['ELDER']}><AssistantPage/></ProtectedRoute>}/>
       <Route path="/family/connections" element={<ProtectedRoute roles={['FAMILY']}><FamilyConnectionsPage/></ProtectedRoute>}/>
       <Route path="/family/elders" element={<ProtectedRoute roles={['FAMILY']}><FamilyDirectoryPage mode="elders"/></ProtectedRoute>}/>
       <Route path="/family/medications" element={<ProtectedRoute roles={['FAMILY']}><FamilyDirectoryPage mode="medications"/></ProtectedRoute>}/>
       <Route path="/family/check-ins" element={<ProtectedRoute roles={['FAMILY']}><FamilyDirectoryPage mode="checkins"/></ProtectedRoute>}/>
       <Route path="/family/emergencies" element={<ProtectedRoute roles={['FAMILY']}><FamilyEmergenciesPage/></ProtectedRoute>}/>
+      <Route path="/family/assistant" element={<ProtectedRoute roles={['FAMILY']}><AssistantPage/></ProtectedRoute>}/>
       <Route path="/family/elders/:elderId/medications" element={<ProtectedRoute roles={['FAMILY']}><FamilyMedicationsPage/></ProtectedRoute>}/>
       <Route path="/family/elders/:elderId/checkins" element={<ProtectedRoute roles={['FAMILY']}><FamilyCheckInPage/></ProtectedRoute>}/>
       <Route path="/family/elders/:elderId/sos" element={<ProtectedRoute roles={['FAMILY']}><FamilyElderSosPage/></ProtectedRoute>}/>

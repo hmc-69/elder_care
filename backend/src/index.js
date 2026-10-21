@@ -10,6 +10,7 @@ const familyRoutes = require('./routes/familyRoutes')
 const medicationRoutes = require('./routes/medicationRoutes')
 const checkInRoutes = require('./routes/checkInRoutes')
 const sosRoutes = require('./routes/sosRoutes')
+const assistantRoutes = require('./routes/assistantRoutes')
 const prisma = require('./lib/prisma')
 
 const app = express()
@@ -35,6 +36,8 @@ app.use('/api/medications', medicationRoutes)
 app.use('/api/checkins', checkInRoutes)
 app.use('/api/sos', sosRoutes)
 app.use('/api/family', familyRoutes)
+app.use('/api/assistant', assistantRoutes)
+
 
 app.use((request, response) => response.status(404).json({ message: 'Route not found.' }))
 

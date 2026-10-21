@@ -12,7 +12,7 @@ function navigationFor(role: string): NavItem[] {
     { label: 'Daily check-in', to: '/elder/check-in', icon: Check },
     { label: 'Connections', to: '/elder/connections', icon: Users },
     { label: 'SOS emergency', to: '/elder/sos', icon: Shield },
-    { label: 'AI assistant', icon: Sparkles, unavailable: true },
+    { label: 'AI assistant', to: '/elder/assistant', icon: Sparkles },
     { label: 'Profile', to: '/profile', icon: UserRound },
     { label: 'Settings', icon: Settings, unavailable: true },
   ]
@@ -23,7 +23,7 @@ function navigationFor(role: string): NavItem[] {
     { label: 'Medications', to: '/family/medications', icon: Pill },
     { label: 'Check-ins', to: '/family/check-ins', icon: Activity },
     { label: 'SOS alerts', to: '/family/emergencies', icon: Shield },
-    { label: 'AI assistant', icon: Sparkles, unavailable: true },
+    { label: 'AI assistant', to: '/family/assistant', icon: Sparkles },
     { label: 'Profile', to: '/profile', icon: UserRound },
     { label: 'Settings', icon: Settings, unavailable: true },
   ]
@@ -40,6 +40,7 @@ const titles: Array<[string, string]> = [
   ['/dashboard', 'Dashboard'], ['/elder/medications', 'Medications'], ['/family/medications', 'Medications'],
   ['/elder/check-in', 'Daily check-in'], ['/family/check-ins', 'Check-ins'], ['/family/elders', 'My elders'],
   ['/elder/sos', 'SOS emergency'], ['/family/emergencies', 'Emergency alerts'],
+  ['/elder/assistant', 'AI Assistant'], ['/family/assistant', 'AI Assistant'],
   ['/family/elders/', 'Connected elder'],
   ['/family/connections', 'Connections'], ['/elder/connections', 'Connections'], ['/profile', 'Profile'], ['/settings', 'Settings'],
 ]
