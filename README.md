@@ -60,6 +60,18 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 
 Never commit `.env` files or share your JWT secret. Public registration only permits `ELDER` and `FAMILY` roles.
 
+<<<<<<< HEAD
+=======
+#### Configure SOS email alerts (Resend)
+
+1. Create a Resend account at [resend.com](https://resend.com), create an API key, and verify a sending domain (or use a sender address Resend explicitly permits for testing).
+2. In `backend/.env`, set `RESEND_API_KEY` to the API key and `RESEND_FROM_EMAIL` to a sender address accepted by your Resend account, for example `ElderCare Connect <alerts@your-verified-domain.com>`.
+3. Keep both values in the backend environment only. Do not add them to `frontend/.env`, commit them, or expose them through Vite variables.
+4. Restart the backend. When an elder triggers SOS, the backend saves the event and sends email alerts to family members with **accepted** connections. If Resend is not configured or email delivery fails, the SOS event still remains active and the in-app notification workflow continues.
+
+A successful Resend API response means the provider accepted the email request; it does not guarantee delivery to the recipient's inbox. Check the Resend dashboard for delivery, bounce, or suppression status.
+
+>>>>>>> master
 ### 3. Create and migrate the MySQL database
 
 Create the database:

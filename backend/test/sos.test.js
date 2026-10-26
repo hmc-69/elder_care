@@ -172,7 +172,11 @@ test('Module 6 SOS emergency backend workflows', async () => {
   assert.equal(triggerRes.data.event.status, 'ACTIVE')
   assert.equal(triggerRes.data.event.notes, 'Need assistance in living room')
   assert.ok(triggerRes.data.event.triggeredAt)
+<<<<<<< HEAD
   assert.ok(triggerRes.data.disclaimer.includes('In-app notification only'))
+=======
+  assert.ok(triggerRes.data.disclaimer.includes('in-app notifications'))
+>>>>>>> master
   const eventId = triggerRes.data.event.id
 
   // 3. Duplicate active alert is rejected with 409 Conflict
