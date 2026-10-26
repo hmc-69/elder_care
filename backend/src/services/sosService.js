@@ -1,15 +1,9 @@
 const prisma = require('../lib/prisma')
 const notificationService = require('./notificationService')
-<<<<<<< HEAD
-
-const SOS_DISCLAIMER =
-  'In-app notification only. This service alerts connected family members within ElderCare Connect. It does not contact 911, local emergency services, or medical dispatchers. If you are in immediate danger, please contact your local emergency services directly.'
-=======
 const emailService = require('./emailService')
 
 const SOS_DISCLAIMER =
   'This service alerts connected family members through in-app notifications and, when configured, email. It does not contact 911, local emergency services, or medical dispatchers. If you are in immediate danger, please contact your local emergency services directly.'
->>>>>>> master
 
 class SosError extends Error {
   constructor(status, message, event = null) {
@@ -104,8 +98,6 @@ async function triggerSos(elderId, data = {}) {
     relatedEntityId: created.id,
   }).catch(() => {})
 
-<<<<<<< HEAD
-=======
   // The emergency event is already committed. Email errors must never roll it back
   // or turn a successful SOS activation into an API failure.
   await emailService.sendSosEmails({
@@ -116,8 +108,6 @@ async function triggerSos(elderId, data = {}) {
   }).catch((error) => {
     console.error('[email] SOS email workflow failed:', error?.code || error?.name || 'UnknownError')
   })
-
->>>>>>> master
   return {
     message: 'SOS emergency alert activated.',
     event: formatEvent(created),
