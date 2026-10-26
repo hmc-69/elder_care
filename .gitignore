@@ -1,0 +1,29 @@
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+/backend/env
+
+# Frontend
+node_modules/
+frontend/dist/
+frontend/build/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

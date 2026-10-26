@@ -1,0 +1,252 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ELDER
+  FAMILY
+  ADMIN
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
+enum MedicationFrequency {
+  ONCE_DAILY
+  TWICE_DAILY
+  THREE_TIMES_DAILY
+  CUSTOM
+}
+
+enum MedicationLogStatus {
+  PENDING
+  TAKEN
+  MISSED
+}
+
+enum CheckInStatus {
+  PENDING
+  COMPLETED
+  MISSED
+}
+
+enum CheckInPeriod {
+  MORNING
+  NIGHT
+}
+
+enum EmergencyStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  CANCELLED
+}
+
+model User {
+  id                      String             @id @default(cuid())
+  name                    String             @db.VarChar(100)
+  email                   String             @unique @db.VarChar(254)
+  phone                   String?            @db.VarChar(20)
+  passwordHash            String             @db.VarChar(255)
+  role                    UserRole
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  familyConnections       FamilyConnection[] @relation("FamilyConnections")
+  elderConnections        FamilyConnection[] @relation("ElderConnections")
+  medications             Medication[]
+  checkIns                CheckIn[]
+  emergencyEvents         EmergencyEvent[]   @relation("ElderEmergencies")
+  acknowledgedEmergencies EmergencyEvent[]   @relation("AcknowledgedEmergencies")
+  resolvedEmergencies     EmergencyEvent[]   @relation("ResolvedEmergencies")
+  conversations           Conversation[]
+  notificationsReceived   Notification[]     @relation("NotificationsReceived")
+  notificationsActed      Notification[]     @relation("NotificationsActed")
+
+  @@map("users")
+}
+
+model FamilyConnection {
+  id           String           @id @default(cuid())
+  familyId     String
+  elderId      String
+  relationship String           @db.VarChar(40)
+  status       ConnectionStatus @default(PENDING)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  family       User             @relation("FamilyConnections", fields: [familyId], references: [id], onDelete: Restrict)
+  elder        User             @relation("ElderConnections", fields: [elderId], references: [id], onDelete: Restrict)
+
+  // One row per pair ensures concurrent requests cannot create duplicate active relationships.
+  @@unique([familyId, elderId])
+  @@index([familyId])
+  @@index([elderId])
+  @@index([status])
+  @@index([familyId, status])
+  @@index([elderId, status])
+  @@map("family_connections")
+}
+
+model Medication {
+  id           String              @id @default(cuid())
+  elderId      String
+  name         String              @db.VarChar(120)
+  dosage       String              @db.VarChar(80)
+  instructions String?             @db.VarChar(500)
+  frequency    MedicationFrequency
+  times        Json
+  startDate    DateTime            @db.Date
+  endDate      DateTime?           @db.Date
+  active       Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  elder        User                @relation(fields: [elderId], references: [id], onDelete: Restrict)
+  logs         MedicationLog[]
+
+  @@index([elderId, active])
+  @@index([startDate, endDate])
+  @@map("medications")
+}
+
+model MedicationLog {
+  id            String               @id @default(cuid())
+  medicationId  String
+  scheduledDate DateTime             @db.Date
+  scheduledTime String               @db.VarChar(5)
+  status        MedicationLogStatus  @default(PENDING)
+  takenAt       DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  medication    Medication           @relation(fields: [medicationId], references: [id], onDelete: Restrict)
+
+  @@unique([medicationId, scheduledDate, scheduledTime])
+  @@index([scheduledDate, status])
+  @@map("medication_logs")
+}
+
+model CheckIn {
+  id            String        @id @default(cuid())
+  elderId       String
+  checkinDate   DateTime      @db.Date
+  period        CheckInPeriod @default(MORNING)
+  scheduledTime String        @db.VarChar(5)
+  status        CheckInStatus @default(PENDING)
+  checkedInAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  elder         User          @relation(fields: [elderId], references: [id], onDelete: Restrict)
+
+  @@unique([elderId, checkinDate, period])
+  @@index([elderId])
+  @@index([checkinDate])
+  @@index([status])
+  @@map("checkins")
+}
+
+model EmergencyEvent {
+  id                 String          @id @default(cuid())
+  elderId            String
+  status             EmergencyStatus @default(ACTIVE)
+  triggeredAt        DateTime        @default(now())
+  acknowledgedAt     DateTime?
+  acknowledgedById   String?
+  resolvedAt         DateTime?
+  resolvedById       String?
+  cancelledAt        DateTime?
+  cancellationReason String?         @db.VarChar(500)
+  notes              String?         @db.VarChar(500)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  elder              User            @relation("ElderEmergencies", fields: [elderId], references: [id], onDelete: Restrict)
+  acknowledgedBy     User?           @relation("AcknowledgedEmergencies", fields: [acknowledgedById], references: [id], onDelete: Restrict)
+  resolvedBy         User?           @relation("ResolvedEmergencies", fields: [resolvedById], references: [id], onDelete: Restrict)
+
+  @@index([elderId])
+  @@index([status])
+  @@index([triggeredAt])
+  @@index([elderId, status])
+  @@map("emergency_events")
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+model Conversation {
+  id        String        @id @default(cuid())
+  userId    String
+  title     String        @db.VarChar(150)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[]
+
+  @@index([userId])
+  @@index([updatedAt])
+  @@map("conversations")
+}
+
+model ChatMessage {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           ChatRole
+  content        String       @db.Text
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+enum NotificationType {
+  CONNECTION_REQUEST
+  CONNECTION_ACCEPTED
+  CONNECTION_REJECTED
+  CHECKIN_COMPLETED
+  CHECKIN_MISSED
+  MEDICATION_DUE
+  MEDICATION_TAKEN
+  MEDICATION_MISSED
+  SOS_TRIGGERED
+  SOS_ACKNOWLEDGED
+  SOS_RESOLVED
+  SOS_CANCELLED
+  SYSTEM
+}
+
+model Notification {
+  id                String            @id @default(cuid())
+  recipientUserId   String
+  actorUserId       String?
+  type              NotificationType
+  title             String            @db.VarChar(150)
+  message           String            @db.VarChar(500)
+  relatedEntityType String?           @db.VarChar(50)
+  relatedEntityId   String?           @db.VarChar(191)
+  readAt            DateTime?
+  createdAt         DateTime          @default(now())
+
+  recipientUser     User              @relation("NotificationsReceived", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  actorUser         User?             @relation("NotificationsActed", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([recipientUserId])
+  @@index([readAt])
+  @@index([createdAt])
+  @@index([recipientUserId, readAt])
+  @@index([type, relatedEntityType, relatedEntityId])
+  @@map("notifications")
+}
+
+
