@@ -50,7 +50,7 @@ require.cache[emailPath] = {
   id: emailPath,
   filename: emailPath,
   loaded: true,
-  exports: { async sendSosEmails() { throw new Error('Simulated Resend outage') } },
+  exports: { async sendSosEmails() { throw new Error('Simulated SMTP outage') } },
 }
 const { triggerSos } = require('../src/services/sosService')
 
